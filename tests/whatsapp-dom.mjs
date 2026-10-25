@@ -141,5 +141,16 @@ try {
  });assert.equal(reused,'reuse');passed++;console.log('PASS reused media send button distinguished from original chat send');
  await page.setContent('<div aria-disabled="true"><div role="button" aria-label="Enviar mensagem">Enviar</div></div><button aria-label="Agendar envio">Agendar</button>');await page.addScriptTag({content:source});
  assert.equal(await page.evaluate(()=>ContatoWhatsAppDOM.sendButtons().length),0);passed++;console.log('PASS disabled ancestor and scheduled-send control are not clicked');
+ await page.setContent('<footer><button aria-label="Enviar">Outro envio</button></footer>');await page.addScriptTag({content:source});
+ const keyboard=await page.evaluate(()=>{
+  window.beforeKeyboard=ContatoWhatsAppDOM.snapshot();const panel=document.createElement('section');panel.id='keyboard-panel';panel.innerHTML='<canvas width="180" height="160"></canvas><div contenteditable="true">Legenda pronta</div><div role="button"><svg><path></path></svg></div>';document.body.append(panel);
+  const draft=ContatoWhatsAppDOM.keyboardPreview(window.beforeKeyboard);let down=0,up=0,clicks=0;
+  panel.addEventListener('click',()=>clicks++);draft.caption.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.keyCode===13){e.preventDefault();down++;}});draft.caption.addEventListener('keyup',()=>up++);
+  ContatoWhatsAppDOM.pressEnter(draft.caption);return {down,up,clicks,text:ContatoWhatsAppDOM.text(draft.caption),focused:document.activeElement===draft.caption};
+ });assert.deepEqual(keyboard,{down:1,up:1,clicks:0,text:'Legenda pronta',focused:true});passed++;console.log('PASS unknown send marker uses one Enter in the media caption');
+ await page.evaluate(()=>{const button=document.createElement('button');button.id='disabled-send';button.disabled=true;button.setAttribute('aria-label','Enviar');document.querySelector('#keyboard-panel').append(button);});
+ assert.equal(await page.evaluate(()=>ContatoWhatsAppDOM.keyboardPreview(window.beforeKeyboard)),null);passed++;console.log('PASS Enter fallback cannot bypass a recognized disabled send button');
+ await page.evaluate(()=>{const button=document.querySelector('#disabled-send');button.disabled=false;button.after(button.cloneNode(true));});
+ assert.equal(await page.evaluate(()=>ContatoWhatsAppDOM.keyboardPreview(window.beforeKeyboard)),null);passed++;console.log('PASS Enter fallback rejects ambiguous send controls');
  console.log(`${passed} regressões de DOM passaram.`);
 }finally{await browser.close();}

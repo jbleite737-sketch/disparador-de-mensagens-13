@@ -1,4 +1,4 @@
-# Contato Flow 1.6.5 — extensão Chrome
+# Contato Flow 1.6.6 — extensão Chrome
 
 Extensão local para importar contatos e organizar uma fila de mensagens de texto e fotos no WhatsApp Web. Construída a partir da análise funcional do WabulkXpress, com código independente.
 
@@ -47,7 +47,7 @@ Permissões: `storage` para persistência, `alarms` para a fila e acesso apenas 
 
 O núcleo, a mídia e a fila possuem testes automatizados. A interface, o background e o content script foram exercitados no Chromium com APIs Chrome e WhatsApp simulados, sem envio real. O Chromium deste ambiente proíbe extensões locais por política administrativa, por isso não foi possível validar a extensão carregada de fato neste ambiente. A interface real do WhatsApp e os diferentes tipos de conversa ainda precisam de teste com um número seu. Conversas com identificadores LID, sem telefone verificável na página, são recusadas pelo adaptador.
 
-A versão 1.6.5 envia **texto ou uma foto JPG/PNG/WebP por campanha**, com legenda opcional. Não inclui vídeo, áudio, PDF, galerias, fotos diferentes por contato, email/SMS, IA ou agendamento por data. Para planilhas .xls, salve como .xlsx. A extensão não é afiliada ao WhatsApp/Meta e não foi publicada na loja.
+A versão 1.6.6 envia **texto ou uma foto JPG/PNG/WebP por campanha**, com legenda opcional. Não inclui vídeo, áudio, PDF, galerias, fotos diferentes por contato, email/SMS, IA ou agendamento por data. Para planilhas .xls, salve como .xlsx. A extensão não é afiliada ao WhatsApp/Meta e não foi publicada na loja.
 
 ## Desenvolvimento
 
@@ -66,13 +66,13 @@ O teste de navegador usa `/usr/bin/chromium`. Ele simula as APIs Chrome e o arma
 
 Arquivos: `extension/` (produto), `tests/` (testes), `docs/ANALISE-REA.md` (análise), `docs/rea-original.json` (evidência REA).
 
-## Atualizar das versões anteriores para 1.6.5
+## Atualizar das versões anteriores para 1.6.6
 
 Pause a campanha, feche a aba dedicada do WhatsApp, substitua os arquivos na mesma pasta de instalação e clique **Recarregar** em `chrome://extensions`. Reabra o painel. Para contatos já marcados como erro na versão anterior, crie uma nova campanha com a lista desejada; contatos submetidos ou incertos não são recolocados na fila automaticamente.
 
 ## Foto e legenda em uma única mensagem
 
-A extensão usa automação do WhatsApp Web, não uma chamada à API oficial da Meta. Internamente, cada operação de foto contém um único objeto `{type: 'image', media, caption}`. O arquivo é colado na conversa por um evento de colagem com a imagem, a legenda personalizada é preenchida nesse editor e somente o botão de envio da mídia é acionado. Não há envio de texto separado nem fallback para texto quando a foto falha. A prévia do painel mantém foto e legenda no mesmo balão; dimensões, fontes, quebra visual de linha e formatação são determinadas pelo WhatsApp no destino.
+A extensão usa automação do WhatsApp Web, não uma chamada à API oficial da Meta. Internamente, cada operação de foto contém um único objeto `{type: 'image', media, caption}`. O arquivo é colado na conversa por um evento de colagem com a imagem, a legenda personalizada é preenchida nesse editor e a mídia é enviada pelo botão ou, na ausência de controle reconhecido, por um único Enter no campo da legenda. Não há envio de texto separado nem fallback para texto quando a foto falha. A prévia do painel mantém foto e legenda no mesmo balão; dimensões, fontes, quebra visual de linha e formatação são determinadas pelo WhatsApp no destino.
 
 A detecção aceita imagem, canvas ou imagem de fundo na prévia, botão acessível “Enviar/Send” e novos ícones, inclusive quando a prévia fica dentro do rodapé da conversa. Usa elementos criados após colar a foto para não confundir mensagens antigas ou o editor de texto com a prévia.
 
@@ -82,7 +82,7 @@ Na versão 1.3, a conferência anterior ao clique aceita que o WhatsApp recrie o
 
 Na versão 1.5, a legenda não precisa corresponder exatamente ao texto personalizado: se foi solicitada uma legenda, basta que o campo esteja preenchido. Isso permite o envio mesmo se parte do texto ou de um link estiver ausente ou diferente. Foto sem legenda continua permitida quando a campanha não tem texto. O preenchimento emite `input` caso o navegador não o faça e aguarda a atualização do editor; não insere HTML do usuário.
 
-Após o clique, a fila avança quando o campo de texto limpa ou a prévia da foto fecha. Não aguarda mensagem aparecer no histórico, tiques, entrega nem leitura pelo destinatário. Se a interface não limpar/fechar em até 20 segundos, o resultado permanece incerto e não há repetição automática.
+Após o acionamento do envio, a fila avança quando o campo de texto limpa ou a prévia da foto fecha. Não aguarda mensagem aparecer no histórico, tiques, entrega nem leitura pelo destinatário. Se a interface não limpar/fechar em até 20 segundos, o resultado permanece incerto e não há repetição automática.
 
 ## Janela diária de envio
 
@@ -99,3 +99,7 @@ Na versão 1.6.3, o editor recebe foco e o cursor é posicionado dentro do pará
 Na versão 1.6.4, a preparação localiza a imagem nova e um único editor de legenda sem depender do seletor do botão Enviar. O botão é localizado separadamente depois do preenchimento. A inserção retoma a abordagem da versão 1.2: focar o editor completo, selecionar seu conteúdo vazio e executar insertText, sem apagar manualmente parágrafos/nós internos. Permanecem input/change, esperas, tentativas em campo vazio, agendamento e delay. O envio ainda exige um botão reconhecido e habilitado; não há clique por coordenadas nem envio de foto sem a legenda solicitada.
 
 Na versão 1.6.5, o botão é procurado a partir da prévia já identificada. A detecção aceita rótulos de envio com “mensagem” e “(Enter)”, controles acessíveis sem tag button e marcadores de mídia. Ícone e contêiner do mesmo controle são contados uma única vez. Um botão reutilizado pode ser aceito dentro do painel de mídia, sem selecionar o antigo botão da conversa. Controles desabilitados e ações de agendamento não são acionados; se houver mais de um botão de envio candidato, a extensão não escolhe por posição.
+
+Na versão 1.6.6, se nenhum botão de envio for reconhecido após a espera de preparação, a extensão pode usar o atalho Enter no campo da legenda. A prévia deve ser única, o destinatário confirmado e a legenda solicitada preenchida; a janela e o delay continuam obrigatórios. O atalho não é usado para contornar botão reconhecido desabilitado nem controles ambíguos. Há uma única pressão de tecla, sem clique adicional. O relatório distingue atalho e clique; a prévia precisa fechar para a fila continuar. Se o WhatsApp ignorar o evento de teclado ou inserir uma quebra de linha, o resultado será incerto após o timeout e não será repetido. O evento é sintético: não equivale a uma tecla física garantida em todas as versões do WhatsApp.
+
+O diagnóstico distingue controles habilitados e reconhecidos/desabilitados, conta controles da prévia e lista até cinco identificadores de ícones. Não inclui legenda, telefones, HTML ou imagens.

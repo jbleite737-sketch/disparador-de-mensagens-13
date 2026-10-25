@@ -56,6 +56,8 @@
   await rpc('STAGE',{token:job.token,stage:'button'});
   const sendDeadline=Date.now()+15000;
   while(Date.now()<sendDeadline){const ready=mediaPreview();if(ready&&dom.captionReady(ready.caption,job.text))return ready;await sleep(250);}
+  const keyboard=dom.keyboardPreview(previewBaseline);
+  if(keyboard&&dom.captionReady(keyboard.caption,job.text)){await rpc('STAGE',{token:job.token,stage:'keyboard'});return keyboard;}
   throw failure('SEND_BUTTON_NOT_FOUND','Legenda preparada, mas não foi possível identificar um botão de envio único e habilitado. Nenhum envio acionado. '+dom.diagnostics(previewBaseline));
  }
  try{
@@ -78,21 +80,22 @@
   if(!view.main.isConnected||!identity(view.main))throw Error('A conversa mudou antes do envio.');
   let button;
   if(job.media){
-   const current=mediaPreview();if(!current&&!dom.sendButtons().length)throw failure('SEND_BUTTON_NOT_FOUND','Botão de envio não encontrado. Contato ignorado sem enviar.');if(!current||dom.signature(current.image)!==dom.signature(preview.image)||!dom.captionReady(current.caption,job.text))throw Error('A foto ou a legenda mudou antes do envio.');
+   const current=mediaPreview()||(preview.keyboard?dom.keyboardPreview(previewBaseline):null);if(!current||dom.signature(current.image)!==dom.signature(preview.image)||!dom.captionReady(current.caption,job.text))throw Error('A foto ou a legenda mudou antes do envio.');
    preview=current;button=current.button;
   }else{
    const current=surface();if(current&&!current.button)throw failure('SEND_BUTTON_NOT_FOUND','Botão de envio não encontrado. Contato ignorado sem enviar.');if(!current||current.main!==view.main||current.box!==view.box)throw Error('A conversa mudou antes do envio.');button=current.button;
   }
-  clicked=true;button.click();
+  if(job.media&&preview.keyboard)dom.pressEnter(preview.caption,()=>{if(!identity(view.main))throw Error('A conversa mudou antes do envio.');clicked=true;});
+  else{clicked=true;button.click();}
   const end=Date.now()+20000;
   while(Date.now()<end){
    if(!view.main.isConnected||!identity(view.main))throw Error('Conversa alterada após o clique. Confira o envio manualmente.');
    const cleared=job.media?!visible(preview.caption)&&!mediaPreview(true):!normalize(view.box.innerText);
    if(cleared){
-    await rpc('RESULT',{token:job.token,status:'submitted',detail:job.media?'Clique de envio realizado e prévia da foto fechada. Não confirma entrega nem leitura.':'Clique de envio realizado e campo de texto limpo. Não confirma entrega nem leitura.'});return;
+    await rpc('RESULT',{token:job.token,status:'submitted',detail:job.media?(preview.keyboard?'Atalho Enter acionado e prévia da foto fechada. Não confirma entrega nem leitura.':'Clique de envio realizado e prévia da foto fechada. Não confirma entrega nem leitura.'):'Clique de envio realizado e campo de texto limpo. Não confirma entrega nem leitura.'});return;
    }
    await sleep(300);
   }
-  throw Error('Clique realizado, mas sem confirmação visual inequívoca. Não será repetido automaticamente.');
+  throw Error('Envio acionado, mas a interface não confirmou o fechamento/limpeza. Não será repetido automaticamente.');
  }catch(e){try{await rpc('RESULT',{token:job.token,status:clicked?'uncertain':'error',clicked,code:e.code||'ADAPTER_ERROR',detail:e.message});}catch{/* An old, cancelled job cannot change the current campaign. */}}
 })();

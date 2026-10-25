@@ -1,3 +1,11 @@
+# 1.6.6
+
+- Alternativa de envio por Enter no campo da legenda quando nenhum controle de envio é reconhecido após a preparação.
+- Atalho único, com foco e cursor no fim do campo; destinatário, prévia, legenda, janela e delay continuam verificados.
+- Nenhuma alternativa diante de botão reconhecido desabilitado ou ambíguo; nenhuma repetição após acionar clique ou teclado.
+- Relatório distingue clique de atalho; avanço exige fechamento da prévia.
+- Diagnóstico com controles habilitados/total e identificadores de ícones, sem conteúdo da mensagem.
+
 # 1.6.5
 
 - Busca do botão ancorada na prévia de mídia já identificada, preservando o preenchimento da legenda.

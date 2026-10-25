@@ -111,6 +111,24 @@
     }
     return null;
   }
+  function keyboardPreview(before){
+    const draft=mediaDraft(before);if(!draft)return null;
+    if(draft.caption.closest('[aria-disabled="true"]'))return null;
+    // Do not bypass a disabled or ambiguous recognized send control.
+    if(sendButtons(document,{allowDisabled:true}).some(e=>!before.buttons.has(e)||draft.scope.contains(e)))return null;
+    return {...draft,keyboard:true};
+  }
+  function pressEnter(editor,onDispatch=()=>{}){
+    if(!visible(editor))throw Error('Campo de legenda indisponível para o atalho.');
+    editor.focus();
+    if(!editor.isConnected||!(document.activeElement===editor||editor.contains(document.activeElement)))throw Error('Não foi possível focar a legenda para enviar.');
+    if(editor instanceof HTMLTextAreaElement)editor.setSelectionRange(editor.value.length,editor.value.length);
+    else{const range=document.createRange();range.selectNodeContents(editor);range.collapse(false);const selection=getSelection();selection.removeAllRanges();selection.addRange(range);}
+    onDispatch();
+    const options={key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true,cancelable:true,composed:true};
+    editor.dispatchEvent(new KeyboardEvent('keydown',options));
+    editor.dispatchEvent(new KeyboardEvent('keyup',options));
+  }
   function photoInput() {
     return [...document.querySelectorAll('input[type="file"]')]
       .filter(e => !e.disabled && !e.hasAttribute('capture') && /image\//i.test(e.accept))
@@ -159,7 +177,8 @@
     throw Object.assign(Error('A caixa de legenda permaneceu vazia ou indisponível após três tentativas de preenchimento. Nenhum envio acionado.'),{code:'CAPTION_EMPTY'});
   }
   function diagnostics(before) {
-    return `editores novos=${[...document.querySelectorAll(editorSelector)].filter(e => visible(e) && !before.editors.has(e)).length}; prévias visuais=${mediaNodes().filter(e => !before.media.has(e)).length}; botões de envio=${sendButtons().length}`;
+    const icons=[...new Set([...document.querySelectorAll('[data-icon]')].filter(visible).map(e=>e.getAttribute('data-icon')).filter(v=>/^[a-z0-9_-]{1,64}$/i.test(v)))].slice(-5).map(v=>v.slice(0,32));
+    return `editores novos=${[...document.querySelectorAll(editorSelector)].filter(e => visible(e) && !before.editors.has(e)).length}; prévias visuais=${mediaNodes().filter(e => !before.media.has(e)).length}; botões habilitados=${sendButtons().length}; reconhecidos incluindo desabilitados=${sendButtons(document,{allowDisabled:true}).length}; controles da prévia=${mediaDraft(before)?.scope.querySelectorAll('button,[role="button"],[tabindex]').length||0}; ícones=${icons.join(',')||'nenhum'}`;
   }
-  globalThis.ContatoWhatsAppDOM = {visible, normalize, text, sendButtons, mediaNodes, snapshot, preview, mediaDraft, photoInput, setCaption, diagnostics, signature, comparable, captionReady};
+  globalThis.ContatoWhatsAppDOM = {visible, normalize, text, sendButtons, mediaNodes, snapshot, preview, mediaDraft, keyboardPreview, pressEnter, photoInput, setCaption, diagnostics, signature, comparable, captionReady};
 })();

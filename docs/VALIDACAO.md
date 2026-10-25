@@ -1,8 +1,8 @@
-# Validação da versão 1.6.5
+# Validação da versão 1.6.6
 
 - `npm test`: 23 testes passaram, zero falhas. Abrangem CSV/telefones, personalização, limites, exportação, persistência de mídia, rejeição de formatos, tokens da fila, pausa, reinício e resultados incertos.
 - `npm run test:browser`: 16 verificações passaram no Chromium. Incluem XLSX real, deduplicação, campos personalizados, rascunho, fluxo de texto, pausa, relatório, destinatário incorreto, lista colada, renderização sem execução de HTML, foto persistida, foto + legenda em um único clique, ausência de exceções e layout estreito.
-- `npm run test:dom`: 29 regressões passaram: prévia clássica, prévia dentro de `#main/footer`, canvas, fundo CSS, textarea, editor previamente oculto rejeição de prévias ambíguas, três estruturas com emojis-imagem, marcador de envio sem role, aceitação de conteúdo diferente não vazio, editor recriado sem texto e evento input de apoio.
+- `npm run test:dom`: 32 regressões passaram: prévia clássica, prévia dentro de `#main/footer`, canvas, fundo CSS, textarea, editor previamente oculto rejeição de prévias ambíguas, três estruturas com emojis-imagem, marcador de envio sem role, aceitação de conteúdo diferente não vazio, editor recriado sem texto e evento input de apoio.
 - A página de teste usa a política `script-src 'self'; object-src 'none'`, equivalente à restrição de scripts do manifesto. ExcelJS funciona como biblioteca local, sem CDN.
 - `npm run package`: ZIPs gerados e reabertos com validação de CRC e verificação dos arquivos obrigatórios do manifesto.
 - Teste de dois lotes consecutivos: intervalo mínimo/máximo de 30 segundos, um contato por lote e pausa de 30 segundos. A próxima conversa abriu em menos de 10 segundos, sem clique antecipado; o segundo envio ocorreu automaticamente após pelo menos 60 segundos de relógio real; cada contato recebeu uma operação com arquivo e legenda juntos, sem envio de texto separado.
@@ -65,3 +65,9 @@ O teste de DOM cria foto e campo sem botão e só adiciona Enviar depois de inpu
 Seis regressões adicionais cobrem rótulos em português/inglês com (Enter), marcador media-send, marcadores aninhados do mesmo controle, botão reutilizado e desabilitação no ancestral/ação de agendamento. As variantes positivas exigem exatamente um controle e um clique. O teste integrado habilita um botão cujo único seletor reconhecível é aria-label="Enviar mensagem (Enter)", exige um clique e mantém a medição do delay entre contatos.
 
 O usuário confirmou que a legenda foi preenchida na versão anterior. Esse fluxo foi preservado. Os testes cobrem causas reproduzíveis de falha na identificação do botão; o seletor exato na conta real ainda não foi inspecionado.
+
+## Alternativa de teclado na versão 1.6.6
+
+Três regressões de DOM verificam uma única sequência keydown/keyup Enter no campo correto, ausência de clique adicional, preservação da legenda e bloqueio diante de botão reconhecido desabilitado ou ambíguo. No teste integrado, o primeiro contato usa botão sem seletor reconhecido e deve enviar com um Enter e zero cliques. O segundo usa um clique reconhecido e zero Enter; o intervalo real e a conclusão automática da fila continuam obrigatórios.
+
+O receptor de teclado do WhatsApp é simulado. Isso não prova que a versão real do usuário aceita eventos sintéticos nem que Enter está configurado para enviar nessa conta. Se a prévia não fechar, o adaptador registra resultado incerto, pausa e não repete a ação.

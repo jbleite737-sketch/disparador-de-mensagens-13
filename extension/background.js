@@ -81,7 +81,7 @@ async function handle(m,sender){
   const c=s.contacts.find(c=>c.id===s.job.id);
   if(m.type==='STAGE'){
    if(s.status!=='running'||c.status!=='preparing')throw Error('Fila pausada.');
-   const stages={paste:'Colando a foto na conversa…',preview:'Aguardando a tela de mídia e o campo da legenda…',caption:'Preenchendo a legenda da foto…',button:'Legenda preparada. Aguardando o botão de envio…',delay:'Mensagem preparada. Aguardando o delay antes do envio automático…'};
+   const stages={keyboard:'Botão não reconhecido. Legenda pronta para envio pelo atalho Enter…',paste:'Colando a foto na conversa…',preview:'Aguardando a tela de mídia e o campo da legenda…',caption:'Preenchendo a legenda da foto…',button:'Legenda preparada. Aguardando o botão de envio…',delay:'Mensagem preparada. Aguardando o delay antes do envio automático…'};
    if(!Object.hasOwn(stages,m.stage))throw Error('Etapa inválida.');
    s.notice=stages[m.stage];c.detail=s.notice;await save(s);return true;
   }
