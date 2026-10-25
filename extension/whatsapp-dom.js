@@ -40,15 +40,19 @@
   // Requested policy: nonempty caption is sufficient; photo-only jobs stay supported.
   const captionReady = (element,caption) => normalize(caption)?text(element).length>0:text(element).length===0;
   function sendButtons(root = document, {allowDisabled=false} = {}) {
-    const candidates = new Set();
-    for (const icon of root.querySelectorAll('[data-icon="send"],[data-icon="wds-ic-send-filled"],[data-icon="send-filled"],[data-icon="send-alt"],[data-testid="send"]')) {
-      const button = icon.closest('button,[role="button"],[data-testid="send"]') || icon;
-      if (button) candidates.add(button);
+    const candidates=new Set();
+    const control=e=>e.closest('button,[role="button"]')||e.closest('[tabindex]:not([tabindex="-1"])')||e;
+    const label=/^(?:enviar|send)(?:\s+(?:mensagem|message|foto|photo|imagem|image|mídia|midia|media))?(?:\s*\((?:enter|entrar|return)\))?$/i;
+    for(const e of root.querySelectorAll('[data-icon],[data-testid],[aria-label],[title]')){
+      const icon=e.getAttribute('data-icon')||'',testid=e.getAttribute('data-testid')||'';
+      const knownIcon=/^(?:wds-ic-)?send(?:-(?:filled|outline|alt|solid))?$/.test(icon);
+      const knownTest=['send','media-send','media-send-button','compose-btn-send'].includes(testid);
+      if(knownIcon||knownTest||[e.getAttribute('aria-label'),e.getAttribute('title')].some(v=>v&&label.test(v.trim())))candidates.add(control(e));
     }
-    for (const button of root.querySelectorAll('button[aria-label],[role="button"][aria-label],button[title],[role="button"][title]')) {
-      if (/^(enviar|send)(\s+(foto|photo|image|imagem|media|mídia))?$/i.test(button.getAttribute('aria-label') || button.title || '')) candidates.add(button);
-    }
-    return [...candidates].filter(b => visible(b) && (allowDisabled || (!b.disabled && b.getAttribute('aria-disabled') !== 'true')));
+    const visibleCandidates=[...candidates].filter(visible);
+    // Several markers can describe one control (wrapper + icon); count it once.
+    return visibleCandidates.filter(e=>!visibleCandidates.some(parent=>parent!==e&&parent.contains(e)))
+      .filter(e=>allowDisabled||(!e.disabled&&!e.closest('[aria-disabled="true"],button:disabled,fieldset:disabled')));
   }
   function mediaNodes(root = document) {
     return [...root.querySelectorAll('img,canvas,[style*="background-image"]')].filter(element => {
@@ -93,24 +97,19 @@
     return matches.length===1?matches[0]:null;
   }
   function preview(before, {allowDisabled=false} = {}) {
-    const {editors,images}=previewParts(before);
-    const buttons=sendButtons(document,{allowDisabled}).filter(e=>!before.buttons.has(e));
-    const matches = [];
-    for (const button of buttons) {
-      // Stop at the smallest common container, including a preview inside #main/footer.
-      for (let scope = button.parentElement; scope && scope !== document.body && scope !== document.documentElement; scope = scope.parentElement) {
-        const candidates = editors.filter(e => scope.contains(e) && !e.disabled && !e.readOnly);
-        const marked = candidates.filter(e => e.closest('[data-testid="media-caption-input-container"]'));
-        const captions = marked.length ? marked : candidates;
-        const media = images.filter(e => scope.contains(e));
-        if (captions.length === 1 && media.length && buttons.filter(e => scope.contains(e)).length === 1) {
-          matches.push({button, caption: captions[0], image: media[0], scope});
-          break;
-        }
-      }
+    const draft=mediaDraft(before);if(!draft)return null;
+    for(let scope=draft.scope;scope&&scope!==document.body&&scope!==document.documentElement;scope=scope.parentElement){
+      const buttons=sendButtons(scope,{allowDisabled}).filter(button=>{
+        if(!before.buttons.has(button))return true;
+        // A reused send control is valid inside the identified media panel, not
+        // the old chat footer or a broad ancestor that still contains its draft.
+        return draft.scope.contains(button)&&!draft.scope.matches('#main,footer')
+          &&![...before.editors].some(e=>e!==draft.caption&&visible(e)&&draft.scope.contains(e));
+      });
+      if(buttons.length>1)return null;
+      if(buttons.length===1)return {...draft,scope,button:buttons[0]};
     }
-    // Never guess between multiple previews/send actions.
-    return matches.length === 1 ? matches[0] : null;
+    return null;
   }
   function photoInput() {
     return [...document.querySelectorAll('input[type="file"]')]

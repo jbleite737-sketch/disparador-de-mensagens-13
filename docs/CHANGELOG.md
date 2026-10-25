@@ -1,3 +1,11 @@
+# 1.6.5
+
+- Busca do botão ancorada na prévia de mídia já identificada, preservando o preenchimento da legenda.
+- Reconhecimento de Enviar/Send mensagem/message, sufixo (Enter), controles acessíveis e marcadores específicos de mídia.
+- Deduplicação de ícone, marcador e contêiner de um mesmo botão; suporte a botão reutilizado dentro do painel de mídia.
+- Respeito a desabilitação no ancestral e rejeição de ações de agendamento/controles ambíguos.
+- Regressões de seletores, clique único e avanço da fila com delay.
+
 # 1.6.4
 
 - Preparação da legenda independente da identificação do botão Enviar: novo detector de imagem + campo, com rejeição de prévias ambíguas.

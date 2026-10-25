@@ -1,4 +1,4 @@
-# Contato Flow 1.6.4 — extensão Chrome
+# Contato Flow 1.6.5 — extensão Chrome
 
 Extensão local para importar contatos e organizar uma fila de mensagens de texto e fotos no WhatsApp Web. Construída a partir da análise funcional do WabulkXpress, com código independente.
 
@@ -47,7 +47,7 @@ Permissões: `storage` para persistência, `alarms` para a fila e acesso apenas 
 
 O núcleo, a mídia e a fila possuem testes automatizados. A interface, o background e o content script foram exercitados no Chromium com APIs Chrome e WhatsApp simulados, sem envio real. O Chromium deste ambiente proíbe extensões locais por política administrativa, por isso não foi possível validar a extensão carregada de fato neste ambiente. A interface real do WhatsApp e os diferentes tipos de conversa ainda precisam de teste com um número seu. Conversas com identificadores LID, sem telefone verificável na página, são recusadas pelo adaptador.
 
-A versão 1.6.4 envia **texto ou uma foto JPG/PNG/WebP por campanha**, com legenda opcional. Não inclui vídeo, áudio, PDF, galerias, fotos diferentes por contato, email/SMS, IA ou agendamento por data. Para planilhas .xls, salve como .xlsx. A extensão não é afiliada ao WhatsApp/Meta e não foi publicada na loja.
+A versão 1.6.5 envia **texto ou uma foto JPG/PNG/WebP por campanha**, com legenda opcional. Não inclui vídeo, áudio, PDF, galerias, fotos diferentes por contato, email/SMS, IA ou agendamento por data. Para planilhas .xls, salve como .xlsx. A extensão não é afiliada ao WhatsApp/Meta e não foi publicada na loja.
 
 ## Desenvolvimento
 
@@ -66,7 +66,7 @@ O teste de navegador usa `/usr/bin/chromium`. Ele simula as APIs Chrome e o arma
 
 Arquivos: `extension/` (produto), `tests/` (testes), `docs/ANALISE-REA.md` (análise), `docs/rea-original.json` (evidência REA).
 
-## Atualizar das versões anteriores para 1.6.4
+## Atualizar das versões anteriores para 1.6.5
 
 Pause a campanha, feche a aba dedicada do WhatsApp, substitua os arquivos na mesma pasta de instalação e clique **Recarregar** em `chrome://extensions`. Reabra o painel. Para contatos já marcados como erro na versão anterior, crie uma nova campanha com a lista desejada; contatos submetidos ou incertos não são recolocados na fila automaticamente.
 
@@ -97,3 +97,5 @@ Na versão 1.6.2, após colar a imagem o fluxo aguarda no mínimo 3 segundos, lo
 Na versão 1.6.3, o editor recebe foco e o cursor é posicionado dentro do parágrafo, quando houver. Apenas a estrutura vazia é limpa; legendas preenchidas não são apagadas. Após insertText/input, o editor atual recebe também change. A espera mínima após colar a foto continua em 3 segundos; após a legenda, passa a 1 segundo antes de aguardar o botão habilitado e a autorização de envio. Campos aninhados, campos de texto simples e um editor reutilizado dentro do contêiner explícito de legenda são reconhecidos. O aviso da fila mostra cada etapa de preparação para tornar uma eventual parada identificável.
 
 Na versão 1.6.4, a preparação localiza a imagem nova e um único editor de legenda sem depender do seletor do botão Enviar. O botão é localizado separadamente depois do preenchimento. A inserção retoma a abordagem da versão 1.2: focar o editor completo, selecionar seu conteúdo vazio e executar insertText, sem apagar manualmente parágrafos/nós internos. Permanecem input/change, esperas, tentativas em campo vazio, agendamento e delay. O envio ainda exige um botão reconhecido e habilitado; não há clique por coordenadas nem envio de foto sem a legenda solicitada.
+
+Na versão 1.6.5, o botão é procurado a partir da prévia já identificada. A detecção aceita rótulos de envio com “mensagem” e “(Enter)”, controles acessíveis sem tag button e marcadores de mídia. Ícone e contêiner do mesmo controle são contados uma única vez. Um botão reutilizado pode ser aceito dentro do painel de mídia, sem selecionar o antigo botão da conversa. Controles desabilitados e ações de agendamento não são acionados; se houver mais de um botão de envio candidato, a extensão não escolhe por posição.

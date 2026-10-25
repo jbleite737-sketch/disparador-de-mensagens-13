@@ -56,7 +56,7 @@
   await rpc('STAGE',{token:job.token,stage:'button'});
   const sendDeadline=Date.now()+15000;
   while(Date.now()<sendDeadline){const ready=mediaPreview();if(ready&&dom.captionReady(ready.caption,job.text))return ready;await sleep(250);}
-  throw failure('SEND_BUTTON_NOT_FOUND','Legenda preparada, mas o botão de envio não ficou disponível. Nenhum envio acionado.');
+  throw failure('SEND_BUTTON_NOT_FOUND','Legenda preparada, mas não foi possível identificar um botão de envio único e habilitado. Nenhum envio acionado. '+dom.diagnostics(previewBaseline));
  }
  try{
   let view;const deadline=Date.now()+65000;

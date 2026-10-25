@@ -120,5 +120,26 @@ try {
   await ContatoWhatsAppDOM.setCaption(draft.caption,'Legenda restaurada',()=>ContatoWhatsAppDOM.mediaDraft(before)?.caption);
   return {beforeSend:beforeSend===null,text:ContatoWhatsAppDOM.text(draft.caption),ready:!!ContatoWhatsAppDOM.preview(before)};
  });assert.deepEqual(independent,{beforeSend:true,text:'Legenda restaurada',ready:true});assert.equal(await page.locator('#draft').innerText(),'Não alterar');passed++;console.log('PASS caption preparation independent of send button discovery');
+ for(const control of [
+  '<div aria-label="Enviar mensagem (Enter)" tabindex="0">Enviar</div>',
+  '<button aria-label="Send message (Enter)">Send</button>',
+  '<div data-testid="media-send"><span data-icon="send">Enviar</span></div>',
+  '<div role="button"><span data-testid="send"><span data-icon="send">Enviar</span></span></div>'
+ ]){
+  await page.setContent('<footer><div contenteditable="true">Outro rascunho</div><button aria-label="Enviar">Enviar conversa</button></footer>');await page.addScriptTag({content:source});
+  const result=await page.evaluate(control=>{
+   const before=ContatoWhatsAppDOM.snapshot(),panel=document.createElement('section');
+   panel.innerHTML='<canvas width="180" height="160"></canvas><div contenteditable="true">Legenda</div>'+control;document.body.append(panel);
+   let clicks=0;panel.lastElementChild.addEventListener('click',()=>clicks++);
+   const p=ContatoWhatsAppDOM.preview(before);p?.button.click();return {found:!!p,clicks,count:ContatoWhatsAppDOM.sendButtons(panel).length};
+  },control);assert.deepEqual(result,{found:true,clicks:1,count:1});passed++;console.log('PASS media send label/marker variant and unique click');
+ }
+ await page.setContent('<footer><div contenteditable="true">Rascunho</div><button aria-label="Enviar">Enviar conversa</button></footer><section id="panel"><button id="reuse" aria-label="Enviar">Enviar mídia</button></section>');await page.addScriptTag({content:source});
+ const reused=await page.evaluate(()=>{
+  const before=ContatoWhatsAppDOM.snapshot(),panel=document.querySelector('#panel');panel.insertAdjacentHTML('afterbegin','<canvas width="180" height="160"></canvas><div contenteditable="true">Legenda</div>');
+  const p=ContatoWhatsAppDOM.preview(before);return p?.button.id;
+ });assert.equal(reused,'reuse');passed++;console.log('PASS reused media send button distinguished from original chat send');
+ await page.setContent('<div aria-disabled="true"><div role="button" aria-label="Enviar mensagem">Enviar</div></div><button aria-label="Agendar envio">Agendar</button>');await page.addScriptTag({content:source});
+ assert.equal(await page.evaluate(()=>ContatoWhatsAppDOM.sendButtons().length),0);passed++;console.log('PASS disabled ancestor and scheduled-send control are not clicked');
  console.log(`${passed} regressões de DOM passaram.`);
 }finally{await browser.close();}

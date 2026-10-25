@@ -63,7 +63,7 @@ try{
      });event.target.replaceWith(editor);
      const old=dialog.querySelector('[role=button]');const replacement=old.cloneNode(true);old.replaceWith(replacement);window.buttonReplaced=true;
     },{once:true});
-    dialog.addEventListener('change',()=>{window.changeCount=(window.changeCount||0)+1;const send=dialog.querySelector('[role=button]');send.removeAttribute('aria-disabled');send.setAttribute('aria-label','Enviar');send.querySelector('span').setAttribute('data-icon','wds-ic-send-filled');});
+    dialog.addEventListener('change',()=>{window.changeCount=(window.changeCount||0)+1;const send=dialog.querySelector('[role=button]');send.removeAttribute('aria-disabled');send.setAttribute('aria-label','Enviar mensagem (Enter)');});
     dialog.addEventListener('click',event=>{if(!event.target.closest('[role=button]')||event.target.closest('[role=button]').getAttribute('aria-disabled')==='true')return;send();});
     const send=()=>{window.clickAt=Date.now();window.mediaClicks=(window.mediaClicks||0)+1;const bubble=document.createElement('div');bubble.className='simulated-output';bubble.style.whiteSpace='pre-wrap';const image=document.createElement('img');image.src=imageURL;bubble.append(image,document.createTextNode(window.captionModel));document.querySelector('#history').append(bubble);dialog.remove();};
     },${p.startsWith('5511')?2200:3500});
